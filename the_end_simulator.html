@@ -2,37 +2,74 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Minecraft The End Simulator</title>
+<title>Minecraft Ecosystem Simulator - The End</title>
 <style>
 html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
-  font-family:'Segoe UI',Arial,sans-serif;background:#dde1ea;}
+  font-family:'Segoe UI',Arial,sans-serif;background:#130c1c;}
 #svg{display:block;width:100vw;height:100vh;}
 #ui{position:fixed;top:14px;left:14px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
 #ui>*{pointer-events:all;}
-#panel{background:#ffffffee;padding:11px 14px;border-radius:10px;
-  box-shadow:0 2px 12px rgba(0,0,0,.15);font-size:12px;line-height:1.9;max-width:195px;}
-#panel strong{display:block;font-size:13px;margin-bottom:1px;}
-#panel span{color:#555;font-size:11px;display:block;}
-#legend{background:#ffffffee;padding:10px 14px;border-radius:10px;
-  box-shadow:0 2px 12px rgba(0,0,0,.15);font-size:11px;
-  display:flex;flex-direction:column;gap:4px;}
+#panel{background:#221730ee;color:#f2e6ff;padding:11px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);font-size:12px;line-height:1.9;max-width:195px;border:1px solid #4a3366;}
+#panel strong{display:block;font-size:13px;margin-bottom:1px;color:#c984ff;}
+#panel span{color:#b39ec7;font-size:11px;display:block;}
+#legend{background:#221730ee;color:#f2e6ff;padding:10px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);font-size:11px;
+  display:flex;flex-direction:column;gap:4px;border:1px solid #4a3366;}
 .lr{display:flex;align-items:center;gap:7px;}
-.lsep{height:1px;background:#ddd;margin:3px 0;}
+.lsep{height:1px;background:#4a3366;margin:3px 0;}
 #btns{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:6px;}
 #btns button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;
-  background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:18px;line-height:1;}
-#btns button:hover{background:#e0e3ec;}
+  background:#221730;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5);font-size:18px;line-height:1;border:1px solid #4a3366;}
+#btns button:hover{background:#38254f;}
 #resetbtn{position:fixed;top:56px;right:14px;z-index:200;border:none;
   border-radius:8px;cursor:pointer;padding:6px 14px;
-  background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;}
-#resetbtn:hover{background:#e0e3ec;}
+  background:#221730;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.5);font-size:12px;border:1px solid #4a3366;}
+#resetbtn:hover{background:#38254f;}
 
+/* Dynamic fade animation for the highlights */
 .node-shade {
   transition: opacity 0.6s ease-out;
   opacity: 0;
 }
 .node-shade.active {
   opacity: 0.35;
+}
+
+/* Container for inter-dimensional portals */
+#dimension-container {
+  background: #221730ee;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+  max-width: 195px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid #4a3366;
+}
+.dimension-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: white !important;
+  font-weight: 600;
+  padding: 8px 0;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: 12px;
+}
+.link-overworld {
+  background: #2e6f40;
+}
+.link-overworld:hover {
+  background: #1e4a2a;
+}
+.link-nether {
+  background: #a83b3b;
+}
+.link-nether:hover {
+  background: #782424;
 }
 </style>
 </head>
@@ -57,7 +94,7 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
     <stop offset="100%" stop-color="#ff4444" stop-opacity="0"/>
   </radialGradient>
 </defs>
-<rect x="-5000" y="-5000" width="20000" height="20000" fill="#dde1ea"/>
+<rect x="-5000" y="-5000" width="20000" height="20000" fill="#130c1c"/>
 <g id="vp">
   <g id="gGroups"></g>
   <g id="gLinks"></g>
@@ -74,26 +111,37 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
     <span>Shift+click → decrease</span>
     <span>Drag to pan · scroll to zoom</span>
   </div>
+
+  <div id="dimension-container">
+    <a href="index.html" class="dimension-link link-overworld">Travel to Overworld 🌍</a>
+    <a href="nether_simulator.html" class="dimension-link link-nether">Travel to The Nether 🔥</a>
+  </div>
+
   <div id="legend">
     <div class="lr">
-      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
-        <rect x="1" y="1" width="16" height="12" rx="3" fill="#d8e8ff" stroke="#0037b3" stroke-width="1.5"/></svg>
-      Entities &amp; Hazards
+      <svg width="18" height="14"><rect x="1" y="1" width="16" height="12" rx="3" fill="#ecd9ff" stroke="#8942cc" stroke-width="1.5"/></svg>
+      Chorus Flora
+    </div>
+    <div class="lr">
+      <svg width="18" height="14"><rect x="1" y="1" width="16" height="12" rx="3" fill="#d8e8ff" stroke="#0037b3" stroke-width="1.5"/></svg>
+      Player &amp; Gear
+    </div>
+    <div class="lr">
+      <svg width="18" height="14"><circle cx="9" cy="7" r="6" fill="#f5d6ff" stroke="#aa00cc" stroke-width="1.5"/></svg>
+      End Inhabitants
+    </div>
+    <div class="lr">
+      <svg width="18" height="14"><polygon points="9,1 17,7 9,13 1,7" fill="#f3efcc" stroke="#a39630" stroke-width="1.5"/></svg>
+      End Structures
     </div>
     <div class="lsep"></div>
     <div class="lr">
-      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
-        <defs><marker id="la" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
-          <path d="M0,0L0,7L9,3.5z" fill="#1e90ff"/></marker></defs>
-        <line x1="2" y1="5" x2="24" y2="5" stroke="#1e90ff" stroke-width="2" marker-end="url(#la)"/>
-      </svg>Reinforce
+      <svg width="30" height="10"><line x1="2" y1="5" x2="24" y2="5" stroke="#1e90ff" stroke-width="2"/></svg>
+      Reinforce
     </div>
     <div class="lr">
-      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
-        <defs><marker id="lb" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
-          <path d="M0,0L0,7L9,3.5z" fill="#ff4444"/></marker></defs>
-        <line x1="2" y1="5" x2="24" y2="5" stroke="#ff4444" stroke-width="2" stroke-dasharray="5 2" marker-end="url(#lb)"/>
-      </svg>Balance
+      <svg width="30" height="10"><line x1="2" y1="5" x2="24" y2="5" stroke="#ff4444" stroke-width="2" stroke-dasharray="5 2"/></svg>
+      Suppress
     </div>
   </div>
 </div>
@@ -117,83 +165,113 @@ const defsEl =document.getElementById('defs');
 function se(t){return document.createElementNS(NS,t);}
 function sa(e,o){for(const[k,v]of Object.entries(o))e.setAttribute(k,String(v));return e;}
 
+// ── CATEGORY STYLES ───────────────────────────────────────────────────────────
 const CAT={
-  dimension:{
+  flora:{
+    shape:'rect',
+    groupFill:'#291d38',groupStroke:'#684299',
+    nodeFill:'#ecd9ff',nodeDark:'#661fcc',nodeBorder:'#8942cc',
+    label:'Chorus Flora'
+  },
+  player_defense:{
+    shape:'rect',
+    groupFill:'#1a2636',groupStroke:'#3b6299',
+    nodeFill:'#d8e8ff',nodeDark:'#0037b3',nodeBorder:'#2255cc',
+    label:'Player & Gear'
+  },
+  mobs:{
     shape:'circle',
-    groupFill:'#e3dbec',groupStroke:'#7b52ab',
-    nodeFill:'#e3dbec',nodeDark:'#522685',nodeBorder:'#6c3b9e',
-    label:'The End Ecosystem'
+    groupFill:'#2d1836',groupStroke:'#8f1ebd',
+    nodeFill:'#f5d6ff',nodeDark:'#550080',nodeBorder:'#aa00cc',
+    label:'End Inhabitants'
+  },
+  structures:{
+    shape:'diamond',
+    groupFill:'#2e2d24',groupStroke:'#8c8238',
+    nodeFill:'#f3efcc',nodeDark:'#736814',nodeBorder:'#a39630',
+    label:'End Structures'
   }
 };
 
-// Extracted and mapped directly from Loopy source token matrix
+// ── NODE LAYOUT ───────────────────────────────────────────────────────────────
 const NODES={
-  EnderDragon:  {x:528,  y:514, cat:'dimension', val:50, label:'Ender\nDragon'},
-  EndCrystal:   {x:813,  y:625, cat:'dimension', val:50, label:'End\nCrystal'},
-  Player:       {x:478,  y:755, cat:'dimension', val:50, label:'Player'},
-  Shulker:      {x:903,  y:341, cat:'dimension', val:50, label:'Shulker'},
-  EndGateway:   {x:683,  y:289, cat:'dimension', val:50, label:'End\nGateway'},
-  Enderman:     {x:316,  y:435, cat:'dimension', val:50, label:'Enderman'},
-  Loot:         {x:454,  y:224, cat:'dimension', val:50, label:'Loot'},
-  Xp:           {x:740,  y:178, cat:'dimension', val:50, label:'XP'},
-  Elytra:       {x:1074, y:232, cat:'dimension', val:50, label:'Elytra'},
-  EndCities:    {x:1064, y:436, cat:'dimension', val:50, label:'End\nCities'},
-  ChorusFruit:  {x:1073, y:632, cat:'dimension', val:50, label:'Chorus\nFruit'},
-  EnderPearl:   {x:841,  y:807, cat:'dimension', val:50, label:'Ender\nPearl'}
+  Player:       {x:160, y:130, cat:'player_defense', val:50, label:'Player'},
+  Elytra:       {x:160, y:330, cat:'player_defense', val:50, label:'Elytra'},
+
+  ChorusPlant:  {x:430, y:130, cat:'flora',          val:50, label:'Chorus Plant'},
+  ChorusFruit:  {x:430, y:330, cat:'flora',          val:50, label:'Chorus Fruit'},
+
+  EnderDragon:  {x:700, y:130, cat:'mobs',           val:50, label:'Ender Dragon'},
+  Enderman:     {x:700, y:330, cat:'mobs',           val:50, label:'Enderman'},
+  Shulker:      {x:700, y:530, cat:'mobs',           val:50, label:'Shulker'},
+
+  ObsidianPillar:{x:160,y:630, cat:'structures',     val:50, label:'Obsidian\nPillars'},
+  EndCity:      {x:430, y:630, cat:'structures',     val:50, label:'End City'},
+  EndShip:      {x:700, y:730, cat:'structures',     val:50, label:'End Ship'}
 };
 
 const EDGES=[
-  ['EnderDragon', 'Xp',            1],
-  ['EnderDragon', 'Enderman',      1],
-  ['EnderDragon', 'Shulker',       1],
-  ['EnderDragon', 'EndGateway',    1],
-  ['EnderDragon', 'EndCrystal',    1],
-  ['Shulker',     'Enderman',      1],
-  ['Enderman',    'EnderPearl',    1],
-  ['Loot',        'EndCities',     1],
-  ['EndCities',   'ChorusFruit',   1],
-  ['ChorusFruit', 'Shulker',       1],
-  ['ChorusFruit', 'Shulker',      -1],
-  ['Player',      'EnderDragon',  -1],
-  ['EnderDragon', 'Player',       -1],
-  ['Player',      'Enderman',     -1],
-  ['Enderman',    'Player',       -1],
-  ['Player',      'Shulker',      -1],
-  ['Shulker',     'Player',       -1],
-  ['Player',      'EndCrystal',   -1],
-  ['EndCrystal',  'EndGateway',   -1],
-  ['EnderPearl',  'EndGateway',    1]
+  ['EnderDragon',  'Player',        -1],
+  ['Player',       'EnderDragon',   -1],
+  ['ObsidianPillar','EnderDragon',   1],
+  ['Player',       'ObsidianPillar',-1],
+  ['Player',       'Enderman',      -1],
+  ['Enderman',     'Player',        -1],
+  ['Enderman',     'ChorusPlant',   -1],
+  ['ChorusPlant',  'ChorusFruit',    1],
+  ['ChorusFruit',  'Player',         1],
+  ['EndCity',      'Shulker',        1],
+  ['Player',       'Shulker',       -1],
+  ['Shulker',      'Player',        -1],
+  ['EndCity',      'EndShip',        1],
+  ['EndShip',      'Elytra',         1],
+  ['Elytra',       'Player',         1]
 ];
 
+// ── GROUP BACKGROUND BOXES ────────────────────────────────────────────────────
 const GROUP_BOUNDS={
-  dimension: {x:240, y:120, w:920, h:760, label:'The End Ecosystem'}
+  player_defense: {x:90,  y:60,  w:140, h:340, label:'Player & Gear'},
+  flora:          {x:360, y:60,  w:140, h:340, label:'Chorus Flora'},
+  mobs:           {x:630, y:60,  w:140, h:540, label:'End Inhabitants'},
+  structures:     {x:90,  y:560, w:710, h:240, label:'End Structures'}
 };
 
 Object.entries(GROUP_BOUNDS).forEach(([cat,b])=>{
   const c=CAT[cat];
   const shadow=se('rect');
-  sa(shadow,{x:b.x+4,y:b.y+4,width:b.w,height:b.h,rx:18,fill:'#00000018'});
+  sa(shadow,{x:b.x+4,y:b.y+4,width:b.w,height:b.h,rx:18,fill:'#00000030'});
   gGroups.appendChild(shadow);
 
   const box=se('rect');
-  sa(box,{x:b.x,y:b.y,width:b.w,height:b.h,rx:18,fill:c.groupFill,stroke:c.groupStroke,'stroke-width':'2',opacity:'0.4'});
+  sa(box,{x:b.x,y:b.y,width:b.w,height:b.h,rx:18,fill:c.groupFill,stroke:c.groupStroke,'stroke-width':'2',opacity:'0.75'});
   gGroups.appendChild(box);
 
   const txt=se('text');
-  sa(txt,{x:b.x+16,y:b.y+22,'font-family':'Segoe UI,Arial,sans-serif','font-size':'13','font-weight':'700',fill:c.nodeDark,opacity:'0.85','pointer-events':'none'});
+  sa(txt,{x:b.x+16,y:b.y+22,'font-family':'Segoe UI,Arial,sans-serif','font-size':'12','font-weight':'700',fill:c.nodeBorder,opacity:'0.9','pointer-events':'none'});
   txt.textContent=b.label;
   gGroups.appendChild(txt);
 });
 
+// ── SHAPE GEOMETRY ────────────────────────────────────────────────────────────
 const SH={rect:64,circle:88,diamond:68};
 const ST={rect:-32,circle:-44,diamond:-34};
 
 function makeShapeEl(shape,fillCol,strokeCol,sw){
-  let e=se('circle');
-  sa(e,{r:'44',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  let e;
+  if(shape==='circle'){
+    e=se('circle');
+    sa(e,{r:'44',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }else if(shape==='diamond'){
+    e=se('polygon');
+    sa(e,{points:'0,-34 52,0 0,34 -52,0',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }else{
+    e=se('rect');
+    sa(e,{x:'-58',y:'-32',width:'116',height:'64',rx:'10',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }
   return e;
 }
 
+// ── CLIP PATHS ────────────────────────────────────────────────────────────────
 const clipRects={};
 for(const name of Object.keys(NODES)){
   const cp=se('clipPath');sa(cp,{id:'cp_'+name});
@@ -202,6 +280,7 @@ for(const name of Object.keys(NODES)){
   clipRects[name]=cr;
 }
 
+// ── BUILD NODES ───────────────────────────────────────────────────────────────
 const nodeEls={};
 for(const[name,nd]of Object.entries(NODES)){
   const c=CAT[nd.cat];
@@ -258,6 +337,7 @@ function renderNode(name){
   valEl.setAttribute('fill',bright?'#ffffffcc':'#333333');
 }
 
+// ── EDGES & ORTHOGONAL ROUTING ────────────────────────────────────────────────
 function orthogonalPath(x1,y1,x2,y2,offset=0){
   const mx=(x1+x2)/2+offset;
   return `M ${x1} ${y1} L ${mx} ${y1} L ${mx} ${y2} L ${x2} ${y2}`;
@@ -291,8 +371,7 @@ let edgeIndex=0;
 for(const[from,to,pol]of EDGES){
   const a=NODES[from];
   const b=NODES[to];
-  if(!a || !b) continue;
-  const lane=((edgeIndex%5)-2)*22;
+  const lane=((edgeIndex%7)-3)*22;
   edgeIndex++;
 
   const path=se('path');
@@ -315,15 +394,14 @@ function flashEdge(from,to){
   if(!e)return;
   e.path.setAttribute('opacity','1');
   e.path.setAttribute('stroke-width','3.2');
-  setTimeout(()=>{e.path.setAttribute('opacity','0.5');e.path.setAttribute('stroke-width','1.8');},700);
+  setTimeout(()=>{e.path.setAttribute('opacity','0.5');e.path.setAttribute('stroke-width','2');},700);
 }
 
+// ── SHADE HIGHLIGHT GENERATOR ───────────────────────────────────────────────
 function spawnNodeShade(nodeName, isIncrease, delayMs) {
   setTimeout(() => {
     const node = NODES[nodeName];
-    if(!node) return;
     const shade = se('circle');
-    
     sa(shade, {
       cx: node.x,
       cy: node.y,
@@ -331,27 +409,22 @@ function spawnNodeShade(nodeName, isIncrease, delayMs) {
       fill: isIncrease ? 'url(#gradBlue)' : 'url(#gradRed)',
       class: 'node-shade'
     });
-    
     gShades.appendChild(shade);
-    
     requestAnimationFrame(() => {
       shade.classList.add('active');
     });
   }, delayMs);
 }
 
-const PULSE_SPEED = 0.015;
+// ── PULSE ANIMATION & SYNCHRONIZED PROPAGATION ───────────────────────────────
+const PULSE_SPEED = 0.013;
 
 function animatePulse(from,to,delta,delayMs){
   setTimeout(() => {
     const a=NODES[from],b=NODES[to];
-    if(!a || !b) return;
     const col=delta>0?'#1e90ff':'#ff4444';
-    const r=Math.max(7,Math.min(18,Math.abs(delta)*0.85));
     const g=se('g');
-    const glow=se('circle');sa(glow,{r:String(r*1.8),fill:col,opacity:'0.2'});g.appendChild(glow);
-    const dot=se('circle'); sa(dot, {r:String(r),   fill:col,opacity:'0.9'});g.appendChild(dot);
-    const core=se('circle');sa(core,{r:String(r*0.38),fill:'#fff',opacity:'0.8'});g.appendChild(core);
+    const dot=se('circle'); sa(dot, {r:'9', fill:col, opacity:'0.9'}); g.appendChild(dot);
     gPulses.appendChild(g);
 
     let t=0;
@@ -359,10 +432,8 @@ function animatePulse(from,to,delta,delayMs){
       t += PULSE_SPEED;
       const edge = edgeData.find(e=>e.from===from && e.to===to);
       if(!edge) { g.remove(); return; }
-      
       const pt = orthogonalPoint(a.x, a.y, b.x, b.y, edge.lane, Math.min(t,1));
       g.setAttribute('transform',`translate(${pt.x},${pt.y})`);
-      
       if(t<1){
         requestAnimationFrame(step);
       }else{
@@ -375,42 +446,31 @@ function animatePulse(from,to,delta,delayMs){
 
 function propagate(startName,delta){
   gShades.innerHTML = '';
-  if(!NODES[startName]) return;
-
   NODES[startName].val+=delta;
   renderNode(startName);
-  
   const isIncrease = delta > 0;
   spawnNodeShade(startName, isIncrease, 0);
 
   const queue=[{node:startName,delta,time:0,depth:0}];
   const visited=new Set([startName]);
-  
   const travelDuration = (1 / PULSE_SPEED) * 16.67; 
-  const totalStepDelay = travelDuration + 150; 
+  const totalStepDelay = travelDuration + 120; 
 
   while(queue.length){
     const cur=queue.shift();
-    if(cur.depth >= 6)continue;
-    
+    if(cur.depth >= 5)continue;
     for(const[from,to,pol]of EDGES){
       if(from!==cur.node)continue;
       const nd=cur.delta*pol*0.65;
       const nt=cur.time + totalStepDelay; 
-      
       animatePulse(from,to,nd,cur.time);
-      
       const targetIsIncrease = nd > 0;
       spawnNodeShade(to, targetIsIncrease, nt);
-      
       setTimeout(()=>{
-        if(NODES[to]){
-          NODES[to].val+=nd;
-          renderNode(to);
-          flashEdge(from,to);
-        }
+        NODES[to].val+=nd;
+        renderNode(to);
+        flashEdge(from,to);
       }, nt);
-      
       if(!visited.has(to)){
         visited.add(to);
         queue.push({node:to,delta:nd,time:nt,depth:cur.depth+1});
@@ -425,14 +485,20 @@ function resetAll(){
   for(const name of Object.keys(NODES))renderNode(name);
 }
 
+// ── PAN & ZOOM ────────────────────────────────────────────────────────────────
 let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
 function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
 
-window.addEventListener('load',()=>{
-  const W=window.innerWidth,H=window.innerHeight;
-  const cw=1200,ch=900;
-  scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.85;
-  pan={x:(W-cw*scale)/2 + 50,y:(H-ch*scale)/2 - 50};
+const windowW = window.innerWidth || 1200;
+const windowH = window.innerHeight || 800;
+scale = Math.min((windowW - 60) / 1080, (windowH - 60) / 970, 1) * 0.92;
+pan = { x: (windowW - 1080 * scale) / 2, y: (windowH - 970 * scale) / 2 };
+applyT();
+
+window.addEventListener('resize',()=>{
+  const rW=window.innerWidth,rH=window.innerHeight;
+  scale=Math.min((rW-60)/1080,(rH-60)/970,1)*0.92;
+  pan={x:(rW-1080*scale)/2,y:(rH-970*scale)/2};
   applyT();
 });
 
