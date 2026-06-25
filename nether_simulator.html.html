@@ -10,21 +10,21 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
 #ui{position:fixed;top:14px;left:14px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
 #ui>*{pointer-events:all;}
 #panel{background:#3a1414ee;padding:11px 14px;border-radius:10px;
-  box-shadow:0 2px 12px rgba(0,0,0,.4);font-size:12px;line-height:1.9;max-width:195px;color:#eee;border:1px solid #5c2525;}
+  box-shadow:0 2px 12px rgba(0,0,0,.4);font-size:12px;line-height:1.9;max-width:195px;color:#eee;}
 #panel strong{display:block;font-size:13px;margin-bottom:1px;color:#ff9f7d;}
 #panel span{color:#dfb0b0;font-size:11px;display:block;}
 #legend{background:#3a1414ee;padding:10px 14px;border-radius:10px;
   box-shadow:0 2px 12px rgba(0,0,0,.4);font-size:11px;color:#eee;
-  display:flex;flex-direction:column;gap:4px;border:1px solid #5c2525;}
+  display:flex;flex-direction:column;gap:4px;}
 .lr{display:flex;align-items:center;gap:7px;}
 .lsep{height:1px;background:#5c2525;margin:3px 0;}
 #btns{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:6px;}
 #btns button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;
-  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;line-height:1;color:#fff;border:1px solid #5c2525;}
+  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;line-height:1;color:#fff;}
 #btns button:hover{background:#692727;}
 #resetbtn{position:fixed;top:56px;right:14px;z-index:200;border:none;
   border-radius:8px;cursor:pointer;padding:6px 14px;
-  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:12px;color:#fff;border:1px solid #5c2525;}
+  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:12px;color:#fff;}
 #resetbtn:hover{background:#692727;}
 
 /* Dynamic fade animation for the highlights */
@@ -36,7 +36,7 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   opacity: 0.35;
 }
 
-/* Cross-dimension portal layout container */
+/* Isolated layout fix for the cross-dimension portal box */
 #dimension-container {
   background: #3a1414ee;
   padding: 10px 14px;
@@ -46,7 +46,6 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 1px solid #5c2525;
 }
 .dimension-link {
   display: block;
@@ -56,22 +55,21 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   font-weight: 600;
   padding: 8px 0;
   border-radius: 6px;
-  transition: background 0.2s, border-color 0.2s;
+  transition: background 0.2s;
   font-size: 12px;
 }
 .link-overworld {
   background: #2b753e;
-  border: 1px solid #3d9c53;
 }
 .link-overworld:hover {
   background: #1b4926;
 }
 .link-the-end {
-  background: #221433;
+  background: #2d1433;
   border: 1px solid #7033cc;
 }
 .link-the-end:hover {
-  background: #150c21;
+  background: #1c0a21;
 }
 </style>
 </head>
