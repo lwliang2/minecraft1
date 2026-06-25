@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Minecraft Ecosystem Simulator - The Nether</title>
+<style>
+html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
+  font-family:'Segoe UI',Arial,sans-serif;background:#240909;}
+#svg{display:block;width:100vw;height:100vh;}
+#ui{position:fixed;top:14px;left:14px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+#ui>*{pointer-events:all;}
+#panel{background:#3a1414ee;padding:11px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);font-size:12px;line-height:1.9;max-width:195px;color:#eee;}
+#panel strong{display:block;font-size:13px;margin-bottom:1px;color:#ff9f7d;}
+#panel span{color:#dfb0b0;font-size:11px;display:block;}
+#legend{background:#3a1414ee;padding:10px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.4);font-size:11px;color:#eee;
+  display:flex;flex-direction:column;gap:4px;}
+.lr{display:flex;align-items:center;gap:7px;}
+.lsep{height:1px;background:#5c2525;margin:3px 0;}
+#btns{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:6px;}
+#btns button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;
+  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:18px;line-height:1;color:#fff;}
+#btns button:hover{background:#692727;}
+#resetbtn{position:fixed;top:56px;right:14px;z-index:200;border:none;
+  border-radius:8px;cursor:pointer;padding:6px 14px;
+  background:#4d1b1b;box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:12px;color:#fff;}
+#resetbtn:hover{background:#692727;}
+
+/* Dynamic fade animation for the highlights */
+.node-shade {
+  transition: opacity 0.6s ease-out;
+  opacity: 0;
+}
+.node-shade.active {
+  opacity: 0.35;
+}
+
+/* Isolated layout fix for the cross-dimension portal box */
+#dimension-container {
+  background: #3a1414ee;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.4);
+  max-width: 195px;
+}
+.dimension-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  background: #2b753e;
+  color: white !important;
+  font-weight: 600;
+  padding: 8px 0;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: 12px;
+}
+.dimension-link:hover {
+  background: #1b4926;
+}
+</style>
+</head>
+<body>
+<svg id="svg" xmlns="http://www.w3.org/2000/svg">
+<defs id="defs">
+  <marker id="mBlue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <path d="M0,0 L0,7 L9,3.5 z" fill="#ffaa00"/>
+  </marker>
+  <marker id="mRed" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <path d="M0,0 L0,7 L9,3.5 z" fill="#ff3333"/>
+  </marker>
+  
+  <radialGradient id="gradBlue" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#ffaa00" stop-opacity="1"/>
+    <stop offset="60%" stop-color="#ffaa00" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#ffaa00" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="gradRed" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#ff3333" stop-opacity="1"/>
+    <stop offset="60%" stop-color="#ff3333" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#ff3333" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect x="-5000" y="-5000" width="20000" height="20000" fill="#240909"/>
+<g id="vp">
+  <g id="gGroups"></g>
+  <g id="gLinks"></g>
+  <g id="gPulses"></g>
+  <g id="gShades"></g> <g id="gNodes"></g>
+</g>
+</svg>
+
+<div id="ui">
+  <div id="panel">
+    <strong>The Nether Simulator</strong>
+    <span>Click node → increase</span>
+    <span>Shift+click → decrease</span>
+    <span>Drag to pan · scroll to zoom</span>
+  </div>
+  
+  <div id="dimension-container">
+    <a href="index.html" class="dimension-link">Return to Overworld 🌍</a>
+  </div>
+
+  <div id="legend">
+    <div class="lr">
+      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="16" height="12" rx="3" fill="#4d2424" stroke="#ff7373" stroke-width="1.5"/></svg>
+      Nether Fauna
+    </div>
+    <div class="lr">
+      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="16" height="12" rx="3" fill="#2d3a31" stroke="#3dfa9c" stroke-width="1.5"/></svg>
+      Environment &amp; Hazards
+    </div>
+    <div class="lr">
+      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="7" r="6" fill="#3c3325" stroke="#cc9c3d" stroke-width="1.5"/></svg>
+      Player &amp; Gold
+    </div>
+    <div class="lr">
+      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="9,1 17,7 9,13 1,7" fill="#242233" stroke="#877dfa" stroke-width="1.5"/></svg>
+      Fortress &amp; Fortifications
+    </div>
+    <div class="lsep"></div>
+    <div class="lr">
+      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="la" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
+          <path d="M0,0L0,7L9,3.5z" fill="#ffaa00"/></marker></defs>
+        <line x1="2" y1="5" x2="24" y2="5" stroke="#ffaa00" stroke-width="2" marker-end="url(#la)"/>
+      </svg>Reinforce
+    </div>
+    <div class="lr">
+      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="lb" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
+          <path d="M0,0L0,7L9,3.5z" fill="#ff3333"/></marker></defs>
+        <line x1="2" y1="5" x2="24" y2="5" stroke="#ff3333" stroke-width="2" stroke-dasharray="5 2" marker-end="url(#lb)"/>
+      </svg>Balance
+    </div>
+  </div>
+</div>
+<div id="btns">
+  <button onclick="zoomBy(1.2)">+</button>
+  <button onclick="zoomBy(0.83)">−</button>
+</div>
+<button id="resetbtn" onclick="resetAll()">↺ Reset</button>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const svgEl  =document.getElementById('svg');
+const vp     =document.getElementById('vp');
+const gGroups=document.getElementById('gGroups');
+const gLinks =document.getElementById('gLinks');
+const gPulses=document.getElementById('gPulses');
+const gShades=document.getElementById('gShades');
+const gNodes =document.getElementById('gNodes');
+const defsEl =document.getElementById('defs');
+
+function se(t){return document.createElementNS(NS,t);}
+function sa(e,o){for(const[k,v]of Object.entries(o))e.setAttribute(k,String(v));return e;}
+
+// ── CATEGORY STYLES (NETHER EDITION) ──────────────────────────────────────────
+const CAT={
+  fauna:{
+    shape:'rect',
+    groupFill:'#3d1d1d',groupStroke:'#944141',
+    nodeFill:'#4d2424',nodeDark:'#a83b3b',nodeBorder:'#ff7373',
+    label:'Nether Fauna'
+  },
+  environment:{
+    shape:'rect',
+    groupFill:'#1a2620',groupStroke:'#27734d',
+    nodeFill:'#2d3a31',nodeDark:'#1e9c5c',nodeBorder:'#3dfa9c',
+    label:'Environment & Hazards'
+  },
+  player_resources:{
+    shape:'circle',
+    groupFill:'#30271c',groupStroke:'#917134',
+    nodeFill:'#3c3325',nodeDark:'#cc9c3d',nodeBorder:'#e6b34c',
+    label:'Player & Resources'
+  },
+  fortress:{
+    shape:'diamond',
+    groupFill:'#1a1826',groupStroke:'#4a4373',
+    nodeFill:'#242233',nodeDark:'#554cb3',nodeBorder:'#877dfa',
+    label:'Fortress Operations'
+  },
+};
+
+// ── NODE LAYOUT FROM LOOPY ───────────────────────────────────────────────────
+const NODES={
+  Piglin:         {x:390, y:120, cat:'fauna',            val:50, label:'Piglin'},
+  Hoglin:         {x:250, y:600, cat:'fauna',            val:50, label:'Hoglin'},
+  Strider:        {x:460, y:550, cat:'fauna',            val:50, label:'Strider'},
+  
+  Mushroom:       {x:890, y:90,  cat:'environment',      val:50, label:'Mushroom\n(Fungi)'},
+  WarpedForest:   {x:1010,y:680, cat:'environment',      val:50, label:'Warped Forest'},
+  Lava:           {x:1050,y:830, cat:'environment',      val:50, label:'Lava Lakes'},
+
+  Gold:           {x:680, y:450, cat:'player_resources', val:50, label:'Gold'},
+  Player:         {x:930, y:440, cat:'player_resources', val:50, label:'Player'},
+  Enderman:       {x:660, y:700, cat:'player_resources', val:50, label:'Enderman'},
+
+  NetherFortress: {x:845, y:590, cat:'fortress',         val:50, label:'Nether Fortress'},
+  Blazes:         {x:480, y:680, cat:'fortress',         val:50, label:'Blazes'},
+  Skeleton:       {x:650, y:590, cat:'fortress',         val:50, label:'Skeleton'},
+};
+
+// Accurately ported connections from source loopy properties
+const EDGES=[
+  ['Piglin',         'Gold',           1],
+  ['Player',         'Piglin',        -1],
+  ['Piglin',         'Player',        -1],
+  ['Lava',           'Skeleton',      -1],
+  ['Lava',           'Enderman',      -1],
+  ['Lava',           'Player',        -1],
+  ['WarpedForest',   'Enderman',       1],
+  ['NetherFortress', 'Blazes',         1],
+  ['Player',         'Skeleton',      -1],
+  ['Mushroom',       'Strider',        1],
+  ['Lava',           'Piglin',        -1],
+  ['Hoglin',         'Player',        -1],
+  ['Player',         'Hoglin',        -1],
+  ['Skeleton',       'Player',        -1],
+];
+
+// ── REGIONAL BACKGROUND PACKAGING ──────────────────────────────────────────────
+const GROUP_BOUNDS={
+  fauna:            {x:180, y:60,  w:350, h:600, label:'Nether Organisms'},
+  environment:      {x:830, y:40,  w:280, h:850, label:'Biomes & Hazardous Terrain'},
+  player_resources: {x:600, y:360, w:390, h:410, label:'Exploration Target & Assets'},
+  fortress:         {x:420, y:510, w:390, h:240, label:'Fortress Outposts'},
+};
+
+Object.entries(GROUP_BOUNDS).forEach(([cat,b])=>{
+  const c=CAT[cat];
+  const shadow=se('rect');
+  sa(shadow,{x:b.x+4,y:b.y+4,width:b.w,height:b.h,rx:18,fill:'#00000044'});
+  gGroups.appendChild(shadow);
+
+  const box=se('rect');
+  sa(box,{x:b.x,y:b.y,width:b.w,height:b.h,rx:18,fill:c.groupFill,stroke:c.groupStroke,'stroke-width':'2',opacity:'0.75'});
+  gGroups.appendChild(box);
+
+  const txt=se('text');
+  sa(txt,{x:b.x+16,y:b.y+22,'font-family':'Segoe UI,Arial,sans-serif','font-size':'12','font-weight':'700',fill:c.nodeDark,opacity:'0.9','pointer-events':'none'});
+  txt.textContent=b.label;
+  gGroups.appendChild(txt);
+});
+
+// ── RENDER SYMMETRY MATRICES ──────────────────────────────────────────────────
+const SH={rect:64,circle:88,diamond:68};
+const ST={rect:-32,circle:-44,diamond:-34};
+
+function makeShapeEl(shape,fillCol,strokeCol,sw){
+  let e;
+  if(shape==='circle'){
+    e=se('circle');
+    sa(e,{r:'44',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }else if(shape==='diamond'){
+    e=se('polygon');
+    sa(e,{points:'0,-34 52,0 0,34 -52,0',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }else{
+    e=se('rect');
+    sa(e,{x:'-58',y:'-32',width:'116',height:'64',rx:'10',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  }
+  return e;
+}
+
+// ── OVERLAY PATH SHARDS ───────────────────────────────────────────────────────
+const clipRects={};
+for(const name of Object.keys(NODES)){
+  const cp=se('clipPath');sa(cp,{id:'cp_'+name});
+  const cr=se('rect');sa(cr,{x:'-80',y:'200',width:'200',height:'0'});
+  cp.appendChild(cr);defsEl.appendChild(cp);
+  clipRects[name]=cr;
+}
+
+// ── NODE COMPILATION ─────────────────────────────────────────────────────────
+const nodeEls={};
+for(const[name,nd]of Object.entries(NODES)){
+  const c=CAT[nd.cat];
+  const sh=c.shape;
+  const g=se('g');
+  sa(g,{transform:`translate(${nd.x},${nd.y})`});
+  g.style.cursor='pointer';
+
+  const bg=makeShapeEl(sh,c.nodeFill,c.nodeBorder,'2.5');
+  g.appendChild(bg);
+
+  const fillEl=makeShapeEl(sh,c.nodeDark,'none','0');
+  sa(fillEl,{'clip-path':`url(#cp_${name})`});
+  g.appendChild(fillEl);
+
+  const lines=nd.label.split('\n');
+  const lh=13;
+  const labelEls=lines.map((line,i)=>{
+    const t=se('text');
+    t.textContent=line;
+    sa(t,{x:'0',y:String((i-(lines.length-1)/2)*lh-6),'text-anchor':'middle','dominant-baseline':'middle','font-family':'Segoe UI,Arial,sans-serif','font-size':'11','font-weight':'600',fill:'#eee','pointer-events':'none'});
+    g.appendChild(t);
+    return t;
+  });
+
+  const valEl=se('text');
+  sa(valEl,{x:'0',y:String(lines.length*lh/2+5),'text-anchor':'middle','dominant-baseline':'middle','font-family':'Segoe UI,Arial,sans-serif','font-size':'10',fill:'#bbb','pointer-events':'none'});
+  g.appendChild(valEl);
+
+  g.addEventListener('click',e=>{
+    e.stopPropagation();
+    propagate(name,e.shiftKey?-10:10);
+  });
+
+  gNodes.appendChild(g);
+  nodeEls[name]={labelEls,valEl};
+  renderNode(name);
+}
+
+function renderNode(name){
+  const nd=NODES[name];
+  nd.val=Math.max(0,Math.min(100,nd.val));
+  const pct=nd.val/100;
+  const sh=CAT[nd.cat].shape;
+  const fh=SH[sh],ty=ST[sh];
+  const fillH=fh*pct;
+  const cr=clipRects[name];
+  cr.setAttribute('y',String(ty+fh-fillH));
+  cr.setAttribute('height',String(fillH+2));
+  const{labelEls,valEl}=nodeEls[name];
+  valEl.textContent=Math.round(nd.val)+'%';
+  const bright=pct>0.55;
+  labelEls.forEach(t=>t.setAttribute('fill',bright?'#ffffff':'#eeeeee'));
+  valEl.setAttribute('fill',bright?'#ffffffcc':'#bbbbbb');
+}
+
+// ── CONNECTION PATH MATRIX ────────────────────────────────────────────────────
+function orthogonalPath(x1,y1,x2,y2,offset=0){
+  const mx=(x1+x2)/2+offset;
+  return `M ${x1} ${y1} L ${mx} ${y1} L ${mx} ${y2} L ${x2} ${y2}`;
+}
+
+function orthogonalPoint(x1,y1,x2,y2,offset,t){
+  const mx=(x1+x2)/2+offset;
+  const segs=[
+    {x1:x1,y1:y1,x2:mx,y2:y1},
+    {x1:mx,y1:y1,x2:mx,y2:y2},
+    {x1:mx,y1:y2,x2:x2,y2:y2}
+  ];
+  const lens=segs.map(s=>Math.hypot(s.x2-s.x1,s.y2-s.y1));
+  const total=lens.reduce((a,b)=>a+b,0);
+  let dist=t*total;
+  for(let i=0;i<segs.length;i++){
+    if(dist<=lens[i]){
+      const p=dist/lens[i];
+      return{
+        x:segs[i].x1+(segs[i].x2-segs[i].x1)*p,
+        y:segs[i].y1+(segs[i].y2-segs[i].y1)*p
+      };
+    }
+    dist-=lens[i];
+  }
+  return{x:x2,y:y2};
+}
+
+const edgeData=[];
+let edgeIndex=0;
+for(const[from,to,pol]of EDGES){
+  const a=NODES[from];
+  const b=NODES[to];
+  const lane=((edgeIndex%5)-2)*22;
+  edgeIndex++;
+
+  const path=se('path');
+  sa(path,{
+    d:orthogonalPath(a.x,a.y,b.x,b.y,lane),
+    fill:'none',
+    stroke:pol>0?'#ffaa00':'#ff3333',
+    'stroke-width':'2',
+    'stroke-dasharray':pol<0?'7 4':'none',
+    'marker-end':pol>0?'url(#mBlue)':'url(#mRed)',
+    opacity:'0.5'
+  });
+
+  gLinks.appendChild(path);
+  edgeData.push({from,to,pol,lane,path});
+}
+
+function flashEdge(from,to){
+  const e=edgeData.find(e=>e.from===from&&e.to===to);
+  if(!e)return;
+  e.path.setAttribute('opacity','1');
+  e.path.setAttribute('stroke-width','3.2');
+  setTimeout(()=>{e.path.setAttribute('opacity','0.5');e.path.setAttribute('stroke-width','2');},700);
+}
+
+// ── EXPANSION HIGHLIGHT GENERATION ───────────────────────────────────────────
+function spawnNodeShade(nodeName, isIncrease, delayMs) {
+  setTimeout(() => {
+    const node = NODES[nodeName];
+    const shade = se('circle');
+    sa(shade, {
+      cx: node.x,
+      cy: node.y,
+      r: '95',
+      fill: isIncrease ? 'url(#gradBlue)' : 'url(#gradRed)',
+      class: 'node-shade'
+    });
+    gShades.appendChild(shade);
+    requestAnimationFrame(() => {
+      shade.classList.add('active');
+    });
+  }, delayMs);
+}
+
+// ── CASCADE LOOPS ────────────────────────────────────────────────────────────
+const PULSE_SPEED = 0.012;
+
+function animatePulse(from,to,delta,delayMs){
+  setTimeout(() => {
+    const a=NODES[from],b=NODES[to];
+    const col=delta>0?'#ffaa00':'#ff3333';
+    const r=Math.max(7,Math.min(18,Math.abs(delta)*0.85));
+    const g=se('g');
+    const glow=se('circle');sa(glow,{r:String(r*1.8),fill:col,opacity:'0.2'});g.appendChild(glow);
+    const dot=se('circle'); sa(dot, {r:String(r),   fill:col,opacity:'0.9'});g.appendChild(dot);
+    const core=se('circle');sa(core,{r:String(r*0.38),fill:'#fff',opacity:'0.8'});g.appendChild(core);
+    gPulses.appendChild(g);
+
+    let t=0;
+    function step(){
+      t += PULSE_SPEED;
+      const edge = edgeData.find(e=>e.from===from && e.to===to);
+      if(!edge) { g.remove(); return; }
+      
+      const pt = orthogonalPoint(a.x, a.y, b.x, b.y, edge.lane, Math.min(t,1));
+      g.setAttribute('transform',`translate(${pt.x},${pt.y})`);
+      
+      if(t<1){
+        requestAnimationFrame(step);
+      }else{
+        g.remove();
+      }
+    }
+    requestAnimationFrame(step);
+  }, delayMs);
+}
+
+function propagate(startName,delta){
+  gShades.innerHTML = '';
+  NODES[startName].val+=delta;
+  renderNode(startName);
+  
+  const isIncrease = delta > 0;
+  spawnNodeShade(startName, isIncrease, 0);
+
+  const queue=[{node:startName,delta,time:0,depth:0}];
+  const visited=new Set([startName]);
+  
+  const travelDuration = (1 / PULSE_SPEED) * 16.67; 
+  const totalStepDelay = travelDuration + 150; 
+
+  while(queue.length){
+    const cur=queue.shift();
+    if(cur.depth >= 6)continue;
+    
+    for(const[from,to,pol]of EDGES){
+      if(from!==cur.node)continue;
+      const nd=cur.delta*pol*0.65;
+      const nt=cur.time + totalStepDelay; 
+      
+      animatePulse(from,to,nd,cur.time);
+      
+      const targetIsIncrease = nd > 0;
+      spawnNodeShade(to, targetIsIncrease, nt);
+      
+      setTimeout(()=>{
+        NODES[to].val+=nd;
+        renderNode(to);
+        flashEdge(from,to);
+      }, nt);
+      
+      if(!visited.has(to)){
+        visited.add(to);
+        queue.push({node:to,delta:nd,time:nt,depth:cur.depth+1});
+      }
+    }
+  }
+}
+
+function resetAll(){
+  gShades.innerHTML = '';
+  for(const n of Object.values(NODES))n.val=50;
+  for(const name of Object.keys(NODES))renderNode(name);
+}
+
+// ── DRAG ENGINE AND SCALING MATRIX ───────────────────────────────────────────
+let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
+function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
+
+window.addEventListener('load',()=>{
+  const W=window.innerWidth,H=window.innerHeight;
+  const cw=1200,ch=950;
+  scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.85;
+  pan={x:(W-cw*scale)/2,y:(H-ch*scale)/2};
+  applyT();
+});
+
+svgEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  scale=Math.max(0.2,Math.min(3,scale*(e.deltaY<0?1.1:0.91)));
+  applyT();
+},{passive:false});
+
+svgEl.addEventListener('mousedown',e=>{
+  const tg=e.target;
+  if(tg===svgEl||tg.id==='vp'||tg.id==='gGroups'||tg.tagName==='rect'&&tg.getAttribute('x')==='-5000'){
+    panning=true;ps={x:e.clientX-pan.x,y:e.clientY-pan.y};
+    svgEl.style.cursor='grabbing';
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(!panning)return;
+  pan={x:e.clientX-ps.x,y:e.clientY-ps.y};applyT();
+});
+window.addEventListener('mouseup',()=>{panning=false;svgEl.style.cursor='';});
+
+function zoomBy(f){scale=Math.max(0.2,Math.min(3,scale*f));applyT();}
+</script>
+</body>
+</html>
