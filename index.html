@@ -36,7 +36,14 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   opacity: 0.35;
 }
 
-/* Dimension link button styling safely integrated */
+/* Isolated layout fix for the travel link box */
+#dimension-container {
+  background: #ffffffee;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  max-width: 195px;
+}
 .dimension-link {
   display: block;
   text-align: center;
@@ -44,11 +51,10 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   background: #7b52ab;
   color: white !important;
   font-weight: 600;
-  padding: 6px 0;
-  margin-top: 8px;
+  padding: 8px 0;
   border-radius: 6px;
   transition: background 0.2s;
-  line-height: 1.5;
+  font-size: 12px;
 }
 .dimension-link:hover {
   background: #522685;
@@ -91,8 +97,12 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
     <span>Click node → increase</span>
     <span>Shift+click → decrease</span>
     <span>Drag to pan · scroll to zoom</span>
+  </div>
+  
+  <div id="dimension-container">
     <a href="the_end_simulator.html" class="dimension-link">Travel to The End 🌌</a>
   </div>
+
   <div id="legend">
     <div class="lr">
       <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
@@ -431,109 +441,4 @@ function animatePulse(from,to,delta,delayMs){
     const r=Math.max(7,Math.min(18,Math.abs(delta)*0.85));
     const g=se('g');
     const glow=se('circle');sa(glow,{r:String(r*1.8),fill:col,opacity:'0.2'});g.appendChild(glow);
-    const dot=se('circle'); sa(dot, {r:String(r),   fill:col,opacity:'0.9'});g.appendChild(dot);
-    const core=se('circle');sa(core,{r:String(r*0.38),fill:'#fff',opacity:'0.8'});g.appendChild(core);
-    gPulses.appendChild(g);
-
-    let t=0;
-    function step(){
-      t += PULSE_SPEED;
-      const edge = edgeData.find(e=>e.from===from && e.to===to);
-      if(!edge) { g.remove(); return; }
-      
-      const pt = orthogonalPoint(a.x, a.y, b.x, b.y, edge.lane, Math.min(t,1));
-      g.setAttribute('transform',`translate(${pt.x},${pt.y})`);
-      
-      if(t<1){
-        requestAnimationFrame(step);
-      }else{
-        g.remove();
-      }
-    }
-    requestAnimationFrame(step);
-  }, delayMs);
-}
-
-function propagate(startName,delta){
-  gShades.innerHTML = '';
-  NODES[startName].val+=delta;
-  renderNode(startName);
-  
-  const isIncrease = delta > 0;
-  spawnNodeShade(startName, isIncrease, 0);
-
-  const queue=[{node:startName,delta,time:0,depth:0}];
-  const visited=new Set([startName]);
-  
-  const travelDuration = (1 / PULSE_SPEED) * 16.67; 
-  const totalStepDelay = travelDuration + 150; 
-
-  while(queue.length){
-    const cur=queue.shift();
-    if(cur.depth >= 6)continue;
-    
-    for(const[from,to,pol]of EDGES){
-      if(from!==cur.node)continue;
-      const nd=cur.delta*pol*0.65;
-      const nt=cur.time + totalStepDelay; 
-      
-      animatePulse(from,to,nd,cur.time);
-      
-      const targetIsIncrease = nd > 0;
-      spawnNodeShade(to, targetIsIncrease, nt);
-      
-      setTimeout(()=>{
-        NODES[to].val+=nd;
-        renderNode(to);
-        flashEdge(from,to);
-      }, nt);
-      
-      if(!visited.has(to)){
-        visited.add(to);
-        queue.push({node:to,delta:nd,time:nt,depth:cur.depth+1});
-      }
-    }
-  }
-}
-
-function resetAll(){
-  gShades.innerHTML = '';
-  for(const n of Object.values(NODES))n.val=50;
-  for(const name of Object.keys(NODES))renderNode(name);
-}
-
-// ── PAN & ZOOM ────────────────────────────────────────────────────────────────
-let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
-function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
-
-window.addEventListener('load',()=>{
-  const W=window.innerWidth,H=window.innerHeight;
-  const cw=1080,ch=970;
-  scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.95;
-  pan={x:(W-cw*scale)/2,y:(H-ch*scale)/2};
-  applyT();
-});
-
-svgEl.addEventListener('wheel',e=>{
-  e.preventDefault();
-  scale=Math.max(0.2,Math.min(3,scale*(e.deltaY<0?1.1:0.91)));
-  applyT();
-},{passive:false});
-
-svgEl.addEventListener('mousedown',e=>{
-  const tg=e.target;
-  if(tg===svgEl||tg.id==='vp'||tg.id==='gGroups'||tg.tagName==='rect'&&tg.getAttribute('x')==='-5000'){
-    panning=true;ps={x:e.clientX-pan.x,y:e.clientY-pan.y};
-    svgEl.style.cursor='grabbing';
-  }
-});
-window.addEventListener('mousemove',e=>{
-  if(!panning)return;
-  pan={x:e.clientX-ps.x,y:e.clientY-ps.y};applyT();
-});
-window.addEventListener('mouseup',()=>{panning=false;svgEl.style.cursor='';});
-
-function zoomBy(f){scale=Math.max(0.2,Math.min(3,scale*f));applyT();}
-</script>
-</body>
-</html>
+    const dot=se('circle'); sa(dot, {r:String(r),   fill:col,opacity:'0.9'});g.
