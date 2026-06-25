@@ -98,7 +98,8 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
   <g id="gGroups"></g>
   <g id="gLinks"></g>
   <g id="gPulses"></g>
-  <g id="gShades"></g> <g id="gNodes"></g>
+  <g id="gShades"></g> 
+  <g id="gNodes"></g>
 </g>
 </svg>
 
@@ -516,18 +517,17 @@ function resetAll(){
 let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
 function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
 
-// Execute initial viewport framing immediately 
-const W=window.innerWidth,H=window.innerHeight;
-const cw=1080,ch=970;
-scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.95;
-pan={x:(W-cw*scale)/2,y:(H-ch*scale)/2};
+// Force immediate canvas framing coordinates
+const windowW = window.innerWidth || 1200;
+const windowH = window.innerHeight || 800;
+scale = Math.min((windowW - 60) / 1080, (windowH - 60) / 970, 1) * 0.95;
+pan = { x: (windowW - 1080 * scale) / 2, y: (windowH - 970 * scale) / 2 };
 applyT();
 
-// Fallback resize frame capture
 window.addEventListener('resize',()=>{
   const rW=window.innerWidth,rH=window.innerHeight;
-  scale=Math.min((rW-60)/cw,(rH-60)/ch,1)*0.95;
-  pan={x:(rW-cw*scale)/2,y:(rH-ch*scale)/2};
+  scale=Math.min((rW-60)/1080,(rH-60)/970,1)*0.95;
+  pan={x:(rW-1080*scale)/2,y:(rH-970*scale)/2};
   applyT();
 });
 
