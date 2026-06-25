@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Minecraft The End Simulator</title>
+<style>
+html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
+  font-family:'Segoe UI',Arial,sans-serif;background:#dde1ea;}
+#svg{display:block;width:100vw;height:100vh;}
+#ui{position:fixed;top:14px;left:14px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+#ui>*{pointer-events:all;}
+#panel{background:#ffffffee;padding:11px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15);font-size:12px;line-height:1.9;max-width:195px;}
+#panel strong{display:block;font-size:13px;margin-bottom:1px;}
+#panel span{color:#555;font-size:11px;display:block;}
+#legend{background:#ffffffee;padding:10px 14px;border-radius:10px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15);font-size:11px;
+  display:flex;flex-direction:column;gap:4px;}
+.lr{display:flex;align-items:center;gap:7px;}
+.lsep{height:1px;background:#ddd;margin:3px 0;}
+#btns{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:6px;}
+#btns button{width:32px;height:32px;border:none;border-radius:8px;cursor:pointer;
+  background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:18px;line-height:1;}
+#btns button:hover{background:#e0e3ec;}
+#resetbtn{position:fixed;top:56px;right:14px;z-index:200;border:none;
+  border-radius:8px;cursor:pointer;padding:6px 14px;
+  background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:12px;}
+#resetbtn:hover{background:#e0e3ec;}
+
+.node-shade {
+  transition: opacity 0.6s ease-out;
+  opacity: 0;
+}
+.node-shade.active {
+  opacity: 0.35;
+}
+</style>
+</head>
+<body>
+<svg id="svg" xmlns="http://www.w3.org/2000/svg">
+<defs id="defs">
+  <marker id="mBlue" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <path d="M0,0 L0,7 L9,3.5 z" fill="#1e90ff"/>
+  </marker>
+  <marker id="mRed" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto">
+    <path d="M0,0 L0,7 L9,3.5 z" fill="#ff4444"/>
+  </marker>
+  
+  <radialGradient id="gradBlue" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#1e90ff" stop-opacity="1"/>
+    <stop offset="60%" stop-color="#1e90ff" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#1e90ff" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="gradRed" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#ff4444" stop-opacity="1"/>
+    <stop offset="60%" stop-color="#ff4444" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#ff4444" stop-opacity="0"/>
+  </radialGradient>
+</defs>
+<rect x="-5000" y="-5000" width="20000" height="20000" fill="#dde1ea"/>
+<g id="vp">
+  <g id="gGroups"></g>
+  <g id="gLinks"></g>
+  <g id="gPulses"></g>
+  <g id="gShades"></g> 
+  <g id="gNodes"></g>
+</g>
+</svg>
+
+<div id="ui">
+  <div id="panel">
+    <strong>The End Simulator</strong>
+    <span>Click node → increase</span>
+    <span>Shift+click → decrease</span>
+    <span>Drag to pan · scroll to zoom</span>
+  </div>
+  <div id="legend">
+    <div class="lr">
+      <svg width="18" height="14" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="16" height="12" rx="3" fill="#d8e8ff" stroke="#0037b3" stroke-width="1.5"/></svg>
+      Entities &amp; Hazards
+    </div>
+    <div class="lsep"></div>
+    <div class="lr">
+      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="la" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
+          <path d="M0,0L0,7L9,3.5z" fill="#1e90ff"/></marker></defs>
+        <line x1="2" y1="5" x2="24" y2="5" stroke="#1e90ff" stroke-width="2" marker-end="url(#la)"/>
+      </svg>Reinforce
+    </div>
+    <div class="lr">
+      <svg width="30" height="10" xmlns="http://www.w3.org/2000/svg">
+        <defs><marker id="lb" viewBox="0 0 9 7" refX="8" refY="3.5" markerWidth="5" markerHeight="4" orient="auto">
+          <path d="M0,0L0,7L9,3.5z" fill="#ff4444"/></marker></defs>
+        <line x1="2" y1="5" x2="24" y2="5" stroke="#ff4444" stroke-width="2" stroke-dasharray="5 2" marker-end="url(#lb)"/>
+      </svg>Balance
+    </div>
+  </div>
+</div>
+<div id="btns">
+  <button onclick="zoomBy(1.2)">+</button>
+  <button onclick="zoomBy(0.83)">−</button>
+</div>
+<button id="resetbtn" onclick="resetAll()">↺ Reset</button>
+
+<script>
+const NS='http://www.w3.org/2000/svg';
+const svgEl  =document.getElementById('svg');
+const vp     =document.getElementById('vp');
+const gGroups=document.getElementById('gGroups');
+const gLinks =document.getElementById('gLinks');
+const gPulses=document.getElementById('gPulses');
+const gShades=document.getElementById('gShades');
+const gNodes =document.getElementById('gNodes');
+const defsEl =document.getElementById('defs');
+
+function se(t){return document.createElementNS(NS,t);}
+function sa(e,o){for(const[k,v]of Object.entries(o))e.setAttribute(k,String(v));return e;}
+
+const CAT={
+  dimension:{
+    shape:'circle',
+    groupFill:'#e3dbec',groupStroke:'#7b52ab',
+    nodeFill:'#e3dbec',nodeDark:'#522685',nodeBorder:'#6c3b9e',
+    label:'The End Ecosystem'
+  }
+};
+
+// Extracted and mapped directly from Loopy source token matrix
+const NODES={
+  EnderDragon:  {x:528,  y:514, cat:'dimension', val:50, label:'Ender\nDragon'},
+  EndCrystal:   {x:813,  y:625, cat:'dimension', val:50, label:'End\nCrystal'},
+  Player:       {x:478,  y:755, cat:'dimension', val:50, label:'Player'},
+  Shulker:      {x:903,  y:341, cat:'dimension', val:50, label:'Shulker'},
+  EndGateway:   {x:683,  y:289, cat:'dimension', val:50, label:'End\nGateway'},
+  Enderman:     {x:316,  y:435, cat:'dimension', val:50, label:'Enderman'},
+  Loot:         {x:454,  y:224, cat:'dimension', val:50, label:'Loot'},
+  Xp:           {x:740,  y:178, cat:'dimension', val:50, label:'XP'},
+  Elytra:       {x:1074, y:232, cat:'dimension', val:50, label:'Elytra'},
+  EndCities:    {x:1064, y:436, cat:'dimension', val:50, label:'End\nCities'},
+  ChorusFruit:  {x:1073, y:632, cat:'dimension', val:50, label:'Chorus\nFruit'},
+  EnderPearl:   {x:841,  y:807, cat:'dimension', val:50, label:'Ender\nPearl'}
+};
+
+const EDGES=[
+  ['EnderDragon', 'Xp',            1],
+  ['EnderDragon', 'Enderman',      1],
+  ['EnderDragon', 'Shulker',       1],
+  ['EnderDragon', 'EndGateway',    1],
+  ['EnderDragon', 'EndCrystal',    1],
+  ['Shulker',     'Enderman',      1],
+  ['Enderman',    'EnderPearl',    1],
+  ['Loot',        'EndCities',     1],
+  ['EndCities',   'ChorusFruit',   1],
+  ['ChorusFruit', 'Shulker',       1],
+  ['ChorusFruit', 'Shulker',      -1],
+  ['Player',      'EnderDragon',  -1],
+  ['EnderDragon', 'Player',       -1],
+  ['Player',      'Enderman',     -1],
+  ['Enderman',    'Player',       -1],
+  ['Player',      'Shulker',      -1],
+  ['Shulker',     'Player',       -1],
+  ['Player',      'EndCrystal',   -1],
+  ['EndCrystal',  'EndGateway',   -1],
+  ['EnderPearl',  'EndGateway',    1]
+];
+
+const GROUP_BOUNDS={
+  dimension: {x:240, y:120, w:920, h:760, label:'The End Ecosystem'}
+};
+
+Object.entries(GROUP_BOUNDS).forEach(([cat,b])=>{
+  const c=CAT[cat];
+  const shadow=se('rect');
+  sa(shadow,{x:b.x+4,y:b.y+4,width:b.w,height:b.h,rx:18,fill:'#00000018'});
+  gGroups.appendChild(shadow);
+
+  const box=se('rect');
+  sa(box,{x:b.x,y:b.y,width:b.w,height:b.h,rx:18,fill:c.groupFill,stroke:c.groupStroke,'stroke-width':'2',opacity:'0.4'});
+  gGroups.appendChild(box);
+
+  const txt=se('text');
+  sa(txt,{x:b.x+16,y:b.y+22,'font-family':'Segoe UI,Arial,sans-serif','font-size':'13','font-weight':'700',fill:c.nodeDark,opacity:'0.85','pointer-events':'none'});
+  txt.textContent=b.label;
+  gGroups.appendChild(txt);
+});
+
+const SH={rect:64,circle:88,diamond:68};
+const ST={rect:-32,circle:-44,diamond:-34};
+
+function makeShapeEl(shape,fillCol,strokeCol,sw){
+  let e=se('circle');
+  sa(e,{r:'44',fill:fillCol,stroke:strokeCol||'none','stroke-width':sw||'0'});
+  return e;
+}
+
+const clipRects={};
+for(const name of Object.keys(NODES)){
+  const cp=se('clipPath');sa(cp,{id:'cp_'+name});
+  const cr=se('rect');sa(cr,{x:'-80',y:'200',width:'200',height:'0'});
+  cp.appendChild(cr);defsEl.appendChild(cp);
+  clipRects[name]=cr;
+}
+
+const nodeEls={};
+for(const[name,nd]of Object.entries(NODES)){
+  const c=CAT[nd.cat];
+  const sh=c.shape;
+  const g=se('g');
+  sa(g,{transform:`translate(${nd.x},${nd.y})`});
+  g.style.cursor='pointer';
+
+  const bg=makeShapeEl(sh,c.nodeFill,c.nodeBorder,'2.5');
+  g.appendChild(bg);
+
+  const fillEl=makeShapeEl(sh,c.nodeDark,'none','0');
+  sa(fillEl,{'clip-path':`url(#cp_${name})`});
+  g.appendChild(fillEl);
+
+  const lines=nd.label.split('\n');
+  const lh=13;
+  const labelEls=lines.map((line,i)=>{
+    const t=se('text');
+    t.textContent=line;
+    sa(t,{x:'0',y:String((i-(lines.length-1)/2)*lh-6),'text-anchor':'middle','dominant-baseline':'middle','font-family':'Segoe UI,Arial,sans-serif','font-size':'11','font-weight':'600',fill:'#1a1a1a','pointer-events':'none'});
+    g.appendChild(t);
+    return t;
+  });
+
+  const valEl=se('text');
+  sa(valEl,{x:'0',y:String(lines.length*lh/2+5),'text-anchor':'middle','dominant-baseline':'middle','font-family':'Segoe UI,Arial,sans-serif','font-size':'10',fill:'#333','pointer-events':'none'});
+  g.appendChild(valEl);
+
+  g.addEventListener('click',e=>{
+    e.stopPropagation();
+    propagate(name,e.shiftKey?-10:10);
+  });
+
+  gNodes.appendChild(g);
+  nodeEls[name]={labelEls,valEl};
+  renderNode(name);
+}
+
+function renderNode(name){
+  const nd=NODES[name];
+  nd.val=Math.max(0,Math.min(100,nd.val));
+  const pct=nd.val/100;
+  const sh=CAT[nd.cat].shape;
+  const fh=SH[sh],ty=ST[sh];
+  const fillH=fh*pct;
+  const cr=clipRects[name];
+  cr.setAttribute('y',String(ty+fh-fillH));
+  cr.setAttribute('height',String(fillH+2));
+  const{labelEls,valEl}=nodeEls[name];
+  valEl.textContent=Math.round(nd.val)+'%';
+  const bright=pct>0.55;
+  labelEls.forEach(t=>t.setAttribute('fill',bright?'#ffffff':'#1a1a1a'));
+  valEl.setAttribute('fill',bright?'#ffffffcc':'#333333');
+}
+
+function orthogonalPath(x1,y1,x2,y2,offset=0){
+  const mx=(x1+x2)/2+offset;
+  return `M ${x1} ${y1} L ${mx} ${y1} L ${mx} ${y2} L ${x2} ${y2}`;
+}
+
+function orthogonalPoint(x1,y1,x2,y2,offset,t){
+  const mx=(x1+x2)/2+offset;
+  const segs=[
+    {x1:x1,y1:y1,x2:mx,y2:y1},
+    {x1:mx,y1:y1,x2:mx,y2:y2},
+    {x1:mx,y1:y2,x2:x2,y2:y2}
+  ];
+  const lens=segs.map(s=>Math.hypot(s.x2-s.x1,s.y2-s.y1));
+  const total=lens.reduce((a,b)=>a+b,0);
+  let dist=t*total;
+  for(let i=0;i<segs.length;i++){
+    if(dist<=lens[i]){
+      const p=dist/lens[i];
+      return{
+        x:segs[i].x1+(segs[i].x2-segs[i].x1)*p,
+        y:segs[i].y1+(segs[i].y2-segs[i].y1)*p
+      };
+    }
+    dist-=lens[i];
+  }
+  return{x:x2,y:y2};
+}
+
+const edgeData=[];
+let edgeIndex=0;
+for(const[from,to,pol]of EDGES){
+  const a=NODES[from];
+  const b=NODES[to];
+  if(!a || !b) continue;
+  const lane=((edgeIndex%5)-2)*22;
+  edgeIndex++;
+
+  const path=se('path');
+  sa(path,{
+    d:orthogonalPath(a.x,a.y,b.x,b.y,lane),
+    fill:'none',
+    stroke:pol>0?'#1e90ff':'#ff4444',
+    'stroke-width':'2',
+    'stroke-dasharray':pol<0?'7 4':'none',
+    'marker-end':pol>0?'url(#mBlue)':'url(#mRed)',
+    opacity:'0.5'
+  });
+
+  gLinks.appendChild(path);
+  edgeData.push({from,to,pol,lane,path});
+}
+
+function flashEdge(from,to){
+  const e=edgeData.find(e=>e.from===from&&e.to===to);
+  if(!e)return;
+  e.path.setAttribute('opacity','1');
+  e.path.setAttribute('stroke-width','3.2');
+  setTimeout(()=>{e.path.setAttribute('opacity','0.5');e.path.setAttribute('stroke-width','1.8');},700);
+}
+
+function spawnNodeShade(nodeName, isIncrease, delayMs) {
+  setTimeout(() => {
+    const node = NODES[nodeName];
+    if(!node) return;
+    const shade = se('circle');
+    
+    sa(shade, {
+      cx: node.x,
+      cy: node.y,
+      r: '95',
+      fill: isIncrease ? 'url(#gradBlue)' : 'url(#gradRed)',
+      class: 'node-shade'
+    });
+    
+    gShades.appendChild(shade);
+    
+    requestAnimationFrame(() => {
+      shade.classList.add('active');
+    });
+  }, delayMs);
+}
+
+const PULSE_SPEED = 0.015;
+
+function animatePulse(from,to,delta,delayMs){
+  setTimeout(() => {
+    const a=NODES[from],b=NODES[to];
+    if(!a || !b) return;
+    const col=delta>0?'#1e90ff':'#ff4444';
+    const r=Math.max(7,Math.min(18,Math.abs(delta)*0.85));
+    const g=se('g');
+    const glow=se('circle');sa(glow,{r:String(r*1.8),fill:col,opacity:'0.2'});g.appendChild(glow);
+    const dot=se('circle'); sa(dot, {r:String(r),   fill:col,opacity:'0.9'});g.appendChild(dot);
+    const core=se('circle');sa(core,{r:String(r*0.38),fill:'#fff',opacity:'0.8'});g.appendChild(core);
+    gPulses.appendChild(g);
+
+    let t=0;
+    function step(){
+      t += PULSE_SPEED;
+      const edge = edgeData.find(e=>e.from===from && e.to===to);
+      if(!edge) { g.remove(); return; }
+      
+      const pt = orthogonalPoint(a.x, a.y, b.x, b.y, edge.lane, Math.min(t,1));
+      g.setAttribute('transform',`translate(${pt.x},${pt.y})`);
+      
+      if(t<1){
+        requestAnimationFrame(step);
+      }else{
+        g.remove();
+      }
+    }
+    requestAnimationFrame(step);
+  }, delayMs);
+}
+
+function propagate(startName,delta){
+  gShades.innerHTML = '';
+  if(!NODES[startName]) return;
+
+  NODES[startName].val+=delta;
+  renderNode(startName);
+  
+  const isIncrease = delta > 0;
+  spawnNodeShade(startName, isIncrease, 0);
+
+  const queue=[{node:startName,delta,time:0,depth:0}];
+  const visited=new Set([startName]);
+  
+  const travelDuration = (1 / PULSE_SPEED) * 16.67; 
+  const totalStepDelay = travelDuration + 150; 
+
+  while(queue.length){
+    const cur=queue.shift();
+    if(cur.depth >= 6)continue;
+    
+    for(const[from,to,pol]of EDGES){
+      if(from!==cur.node)continue;
+      const nd=cur.delta*pol*0.65;
+      const nt=cur.time + totalStepDelay; 
+      
+      animatePulse(from,to,nd,cur.time);
+      
+      const targetIsIncrease = nd > 0;
+      spawnNodeShade(to, targetIsIncrease, nt);
+      
+      setTimeout(()=>{
+        if(NODES[to]){
+          NODES[to].val+=nd;
+          renderNode(to);
+          flashEdge(from,to);
+        }
+      }, nt);
+      
+      if(!visited.has(to)){
+        visited.add(to);
+        queue.push({node:to,delta:nd,time:nt,depth:cur.depth+1});
+      }
+    }
+  }
+}
+
+function resetAll(){
+  gShades.innerHTML = '';
+  for(const n of Object.values(NODES))n.val=50;
+  for(const name of Object.keys(NODES))renderNode(name);
+}
+
+let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
+function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
+
+window.addEventListener('load',()=>{
+  const W=window.innerWidth,H=window.innerHeight;
+  const cw=1200,ch=900;
+  scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.85;
+  pan={x:(W-cw*scale)/2 + 50,y:(H-ch*scale)/2 - 50};
+  applyT();
+});
+
+svgEl.addEventListener('wheel',e=>{
+  e.preventDefault();
+  scale=Math.max(0.2,Math.min(3,scale*(e.deltaY<0?1.1:0.91)));
+  applyT();
+},{passive:false});
+
+svgEl.addEventListener('mousedown',e=>{
+  const tg=e.target;
+  if(tg===svgEl||tg.id==='vp'||tg.id==='gGroups'||tg.tagName==='rect'&&tg.getAttribute('x')==='-5000'){
+    panning=true;ps={x:e.clientX-pan.x,y:e.clientY-pan.y};
+    svgEl.style.cursor='grabbing';
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(!panning)return;
+  pan={x:e.clientX-ps.x,y:e.clientY-ps.y};applyT();
+});
+window.addEventListener('mouseup',()=>{panning=false;svgEl.style.cursor='';});
+
+function zoomBy(f){scale=Math.max(0.2,Math.min(3,scale*f));applyT();}
+</script>
+</body>
+</html>
