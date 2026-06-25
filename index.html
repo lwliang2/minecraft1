@@ -426,7 +426,6 @@ function spawnNodeShade(nodeName, isIncrease, delayMs) {
   setTimeout(() => {
     const node = NODES[nodeName];
     const shade = se('circle');
-    
     sa(shade, {
       cx: node.x,
       cy: node.y,
@@ -434,9 +433,7 @@ function spawnNodeShade(nodeName, isIncrease, delayMs) {
       fill: isIncrease ? 'url(#gradBlue)' : 'url(#gradRed)',
       class: 'node-shade'
     });
-    
     gShades.appendChild(shade);
-    
     requestAnimationFrame(() => {
       shade.classList.add('active');
     });
@@ -462,10 +459,8 @@ function animatePulse(from,to,delta,delayMs){
       t += PULSE_SPEED;
       const edge = edgeData.find(e=>e.from===from && e.to===to);
       if(!edge) { g.remove(); return; }
-      
       const pt = orthogonalPoint(a.x, a.y, b.x, b.y, edge.lane, Math.min(t,1));
       g.setAttribute('transform',`translate(${pt.x},${pt.y})`);
-      
       if(t<1){
         requestAnimationFrame(step);
       }else{
@@ -480,36 +475,29 @@ function propagate(startName,delta){
   gShades.innerHTML = '';
   NODES[startName].val+=delta;
   renderNode(startName);
-  
   const isIncrease = delta > 0;
   spawnNodeShade(startName, isIncrease, 0);
 
   const queue=[{node:startName,delta,time:0,depth:0}];
   const visited=new Set([startName]);
-  
   const travelDuration = (1 / PULSE_SPEED) * 16.67; 
   const totalStepDelay = travelDuration + 150; 
 
   while(queue.length){
     const cur=queue.shift();
     if(cur.depth >= 6)continue;
-    
     for(const[from,to,pol]of EDGES){
       if(from!==cur.node)continue;
       const nd=cur.delta*pol*0.65;
       const nt=cur.time + totalStepDelay; 
-      
       animatePulse(from,to,nd,cur.time);
-      
       const targetIsIncrease = nd > 0;
       spawnNodeShade(to, targetIsIncrease, nt);
-      
       setTimeout(()=>{
         NODES[to].val+=nd;
         renderNode(to);
         flashEdge(from,to);
       }, nt);
-      
       if(!visited.has(to)){
         visited.add(to);
         queue.push({node:to,delta:nd,time:nt,depth:cur.depth+1});
@@ -528,11 +516,18 @@ function resetAll(){
 let pan={x:0,y:0},scale=1,panning=false,ps={x:0,y:0};
 function applyT(){vp.setAttribute('transform',`translate(${pan.x},${pan.y}) scale(${scale})`);}
 
-window.addEventListener('load',()=>{
-  const W=window.innerWidth,H=window.innerHeight;
-  const cw=1080,ch=970;
-  scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.95;
-  pan={x:(W-cw*scale)/2,y:(H-ch*scale)/2};
+// Execute initial viewport framing immediately 
+const W=window.innerWidth,H=window.innerHeight;
+const cw=1080,ch=970;
+scale=Math.min((W-60)/cw,(H-60)/ch,1)*0.95;
+pan={x:(W-cw*scale)/2,y:(H-ch*scale)/2};
+applyT();
+
+// Fallback resize frame capture
+window.addEventListener('resize',()=>{
+  const rW=window.innerWidth,rH=window.innerHeight;
+  scale=Math.min((rW-60)/cw,(rH-60)/ch,1)*0.95;
+  pan={x:(rW-cw*scale)/2,y:(rH-ch*scale)/2};
   applyT();
 });
 
