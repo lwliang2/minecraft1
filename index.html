@@ -280,7 +280,7 @@ function spawnNodeShade(nodeName, isIncrease, delayMs) {
   }, delayMs);
 }
 
-const PULSE_SPEED = 0.013;
+const PULSE_SPEED = 0.005;
 function animatePulse(from,to,delta,delayMs){
   setTimeout(() => {
     const a=NODES[from],b=NODES[to]; const col=delta>0?'#1e90ff':'#ff4444';
