@@ -60,6 +60,17 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
 .link-end:hover { background: #522685; }
 .link-nether { background: #a83b3b; }
 .link-nether:hover { background: #782424; }
+
+/* Overworld ambient drift: pollen / leaves */
+@keyframes leafDrift {
+  0%   { transform: translate(0px,0px) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.55; }
+  90%  { opacity: 0.45; }
+  100% { transform: translate(40px,140px) rotate(70deg); opacity: 0; }
+}
+.ow-leaf {
+  animation: leafDrift 11s infinite linear;
+}
 </style>
 </head>
 <body>
@@ -82,8 +93,14 @@ html,body{margin:0;padding:0;overflow:hidden;width:100%;height:100%;
     <stop offset="60%" stop-color="#ff4444" stop-opacity="0.5"/>
     <stop offset="100%" stop-color="#ff4444" stop-opacity="0"/>
   </radialGradient>
+  <radialGradient id="gradSun" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fff7d6" stop-opacity="0.55"/>
+    <stop offset="100%" stop-color="#fff7d6" stop-opacity="0"/>
+  </radialGradient>
 </defs>
 <rect x="-5000" y="-5000" width="20000" height="20000" fill="#dde1ea"/>
+<g id="gSunGlow"></g>
+<g id="gLeaves"></g>
 <g id="vp">
   <g id="gGroups"></g>
   <g id="gLinks"></g>
@@ -148,6 +165,39 @@ const defsEl =document.getElementById('defs');
 
 function se(t){return document.createElementNS(NS,t);}
 function sa(e,o){for(const[k,v]of Object.entries(o))e.setAttribute(k,String(v));return e;}
+
+const gSunGlow=document.getElementById('gSunGlow');
+const gLeaves =document.getElementById('gLeaves');
+
+// Soft dappled sunlight patches across the canvas
+const SUN_PATCHES=[
+  {x:150,y:150,r:240},{x:760,y:280,r:280},{x:320,y:680,r:260},
+  {x:880,y:740,r:220},{x:520,y:430,r:300}
+];
+SUN_PATCHES.forEach(p=>{
+  const c=se('circle'); sa(c,{cx:p.x,cy:p.y,r:p.r,fill:'url(#gradSun)'}); gSunGlow.appendChild(c);
+});
+
+// Drifting leaf / pollen particles
+const LEAF_COUNT=40;
+for(let i=0;i<LEAF_COUNT;i++){
+  const isLeaf=Math.random()<0.5;
+  const x=Math.random()*1080, y=Math.random()*970;
+  const dur=(9+Math.random()*6).toFixed(2), delay=(Math.random()*10).toFixed(2);
+  let el;
+  if(isLeaf){
+    el=se('ellipse');
+    const rx=3+Math.random()*2, ry=1.6+Math.random();
+    sa(el,{cx:x,cy:y,rx:rx,ry:ry,fill:Math.random()<0.5?'#7a9c4e':'#c9a23a',class:'ow-leaf'});
+  } else {
+    el=se('circle');
+    const r=1+Math.random()*1.4;
+    sa(el,{cx:x,cy:y,r:r,fill:'#fff2c2',class:'ow-leaf'});
+  }
+  el.style.animationDuration=dur+'s';
+  el.style.animationDelay='-'+delay+'s';
+  gLeaves.appendChild(el);
+}
 
 const CAT={
   flora:{ shape:'rect', groupFill:'#fde8d8', groupStroke:'#d4845a', nodeFill:'#fde8d8', nodeDark:'#b34a10', nodeBorder:'#c45c1a' },
